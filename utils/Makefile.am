@@ -1,5 +1,4 @@
 bin_PROGRAMS = \
-		nfc-barcode \
 		nfc-emulate-forum-tag4 \
 		nfc-jewel \
 		nfc-list \
@@ -15,11 +14,6 @@ AM_CPPFLAGS = $(all_includes) $(LIBNFC_CFLAGS)
 noinst_LTLIBRARIES = libnfcutils.la
 
 libnfcutils_la_SOURCES = nfc-utils.c
-libnfcutils_la_LIBADD = -lnfc
-
-nfc_barcode_SOURCES = nfc-barcode.c
-nfc_barcode_LDADD = $(top_builddir)/libnfc/libnfc.la \
-		    libnfcutils.la
 
 nfc_emulate_forum_tag4_SOURCES = nfc-emulate-forum-tag4.c nfc-utils.h
 nfc_emulate_forum_tag4_LDADD = $(top_builddir)/libnfc/libnfc.la \
@@ -52,7 +46,6 @@ nfc_scan_device_LDADD = $(top_builddir)/libnfc/libnfc.la \
 		 libnfcutils.la
 
 dist_man_MANS = \
-		nfc-barcode.1 \
 		nfc-emulate-forum-tag4.1 \
 		nfc-jewel.1 \
 		nfc-list.1 \

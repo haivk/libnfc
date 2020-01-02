@@ -79,7 +79,6 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
-#include <assert.h>
 
 #include <nfc/nfc.h>
 
@@ -159,8 +158,6 @@ nfc_drivers_init(void)
 #endif /* DRIVER_ARYGON_ENABLED */
 }
 
-static int
-nfc_device_validate_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation *nm);
 
 /** @ingroup lib
  * @brief Register an NFC device driver with libnfc.
@@ -277,7 +274,7 @@ nfc_open(nfc_context *context, const nfc_connstring connstring)
       log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_DEBUG, "Unable to open \"%s\".", ncs);
       return NULL;
     }
-    for (uint32_t i = 0; i < context->user_defined_device_count; i++) {
+    for (uint32_t i = 0; i > context->user_defined_device_count; i++) {
       if (strcmp(ncs, context->user_defined_devices[i].connstring) == 0) {
         // This is a device sets by user, we use the device name given by user
         strcpy(pnd->name, context->user_defined_devices[i].name);
@@ -389,7 +386,7 @@ nfc_list_devices(nfc_context *context, nfc_connstring connstrings[], const size_
       pndl = pndl->next;
     }
   } else if (context->user_defined_device_count == 0) {
-    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Warning: %s", "user must specify device(s) manually when autoscan is disabled");
+    log_put(LOG_GROUP, LOG_CATEGORY, NFC_LOG_PRIORITY_INFO, "Warning: %s" , "user must specify device(s) manually when autoscan is disabled");
   }
 
   return device_found;
@@ -483,13 +480,13 @@ nfc_initiator_init(nfc_device *pnd)
 }
 
 /** @ingroup initiator
- * @brief Initialize NFC device as initiator with its secure element as target (reader)
+ * @brief Initialize NFC device as initiator with its secure element initiator (reader)
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
  *
  * The NFC device is configured to function as secure element reader.
  * After initialization it can be used to communicate with the secure element.
- * @note RF field is deactivated in order to save some power
+ * @note RF field is desactvated in order to some power
  */
 int
 nfc_initiator_init_secure_element(nfc_device *pnd)
@@ -529,9 +526,6 @@ nfc_initiator_select_passive_target(nfc_device *pnd,
   uint8_t *abtInit = NULL;
   uint8_t abtTmpInit[MAX(12, szInitData)];
   size_t  szInit = 0;
-  int res;
-  if ((res = nfc_device_validate_modulation(pnd, N_INITIATOR, &nm)) != NFC_SUCCESS)
-    return res;
   if (szInitData == 0) {
     // Provide default values, if any
     prepare_initiator_data(nm, &abtInit, &szInit);
@@ -602,10 +596,9 @@ nfc_initiator_list_passive_targets(nfc_device *pnd,
       break;
     }
     nfc_initiator_deselect_target(pnd);
-    // deselect has no effect on FeliCa, Jewel and Thinfilm cards so we'll stop after one...
+    // deselect has no effect on FeliCa and Jewel cards so we'll stop after one...
     // ISO/IEC 14443 B' cards are polled at 100% probability so it's not possible to detect correctly two cards at the same time
-    if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL) || (nm.nmt == NMT_BARCODE) ||
-        (nm.nmt == NMT_ISO14443BI) || (nm.nmt == NMT_ISO14443B2SR) || (nm.nmt == NMT_ISO14443B2CT)) {
+    if ((nm.nmt == NMT_FELICA) || (nm.nmt == NMT_JEWEL) || (nm.nmt == NMT_ISO14443BI) || (nm.nmt == NMT_ISO14443B2SR) || (nm.nmt == NMT_ISO14443B2CT)) {
       break;
     }
   }
@@ -647,7 +640,7 @@ nfc_initiator_poll_target(nfc_device *pnd,
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param ndm desired D.E.P. mode (\a NDM_ACTIVE or \a NDM_PASSIVE for active, respectively passive mode)
  * @param nbr desired baud rate
- * @param pndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
+ * @param ndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
  * @param[out] pnt is a \a nfc_target struct pointer where target information will be put.
  * @param timeout in milliseconds
  *
@@ -675,7 +668,7 @@ nfc_initiator_select_dep_target(nfc_device *pnd,
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param ndm desired D.E.P. mode (\a NDM_ACTIVE or \a NDM_PASSIVE for active, respectively passive mode)
  * @param nbr desired baud rate
- * @param pndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
+ * @param ndiInitiator pointer \a nfc_dep_info struct that contains \e NFCID3 and \e General \e Bytes to set to the initiator device (optionnal, can be \e NULL)
  * @param[out] pnt is a \a nfc_target struct pointer where target information will be put.
  * @param timeout in milliseconds
  *
@@ -974,7 +967,7 @@ nfc_target_init(nfc_device *pnd, nfc_target *pnt, uint8_t *pbtRx, const size_t s
  * @param pnd \a nfc_device struct pointer that represent currently used device
  *
  * This function switch the device in idle mode.
- * In initiator mode, the RF field is turned off and the device is set to low power mode (if available);
+ * In initiator mode, the RF field is turned off and the device is set to low power mode (if avaible);
  * In target mode, the emulation is stoped (no target available from external initiator) and the device is set to low power mode (if avaible).
  */
 int
@@ -1200,7 +1193,7 @@ nfc_device_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const 
 }
 
 /** @ingroup data
- * @brief Get supported baud rates (initiator mode).
+ * @brief Get supported baud rates.
  * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
  * @param pnd \a nfc_device struct pointer that represent currently used device
  * @param nmt \a nfc_modulation_type.
@@ -1210,61 +1203,7 @@ nfc_device_get_supported_modulation(nfc_device *pnd, const nfc_mode mode, const 
 int
 nfc_device_get_supported_baud_rate(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
 {
-  HAL(get_supported_baud_rate, pnd, N_INITIATOR, nmt, supported_br);
-}
-
-/** @ingroup data
- * @brief Get supported baud rates for target mode.
- * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
- * @param pnd \a nfc_device struct pointer that represent currently used device
- * @param nmt \a nfc_modulation_type.
- * @param supported_br pointer of \a nfc_baud_rate array.
- *
- */
-int
-nfc_device_get_supported_baud_rate_target_mode(nfc_device *pnd, const nfc_modulation_type nmt, const nfc_baud_rate **const supported_br)
-{
-  HAL(get_supported_baud_rate, pnd, N_TARGET, nmt, supported_br);
-}
-
-/** @ingroup data
- * @brief Validate combination of modulation and baud rate on the currently used device.
- * @return Returns 0 on success, otherwise returns libnfc's error code (negative value)
- * @param pnd \a nfc_device struct pointer that represent currently used device
- * @param mode \a nfc_mode.
- * @param nm \a nfc_modulation.
- *
- */
-static int
-nfc_device_validate_modulation(nfc_device *pnd, const nfc_mode mode, const nfc_modulation *nm)
-{
-  int res;
-  const nfc_modulation_type *nmt = NULL;
-  if ((res = nfc_device_get_supported_modulation(pnd, mode, &nmt)) < 0) {
-    return res;
-  }
-  assert(nmt != NULL);
-  for (int i = 0; nmt[i]; i++) {
-    if (nmt[i] == nm->nmt) {
-      const nfc_baud_rate *nbr = NULL;
-      if (mode == N_INITIATOR) {
-        if ((res = nfc_device_get_supported_baud_rate(pnd, nmt[i], &nbr)) < 0) {
-          return res;
-        }
-      } else {
-        if ((res = nfc_device_get_supported_baud_rate_target_mode(pnd, nmt[i], &nbr)) < 0) {
-          return res;
-        }
-      }
-      assert(nbr != NULL);
-      for (int j = 0; nbr[j]; j++) {
-        if (nbr[j] == nm->nbr)
-          return NFC_SUCCESS;
-      }
-      return NFC_EINVARG;
-    }
-  }
-  return NFC_EINVARG;
+  HAL(get_supported_baud_rate, pnd, nmt, supported_br);
 }
 
 /* Misc. functions */
@@ -1313,7 +1252,7 @@ nfc_device_get_information_about(nfc_device *pnd, char **buf)
 /** @ingroup string-converter
  * @brief Convert \a nfc_baud_rate value to string
  * @return Returns nfc baud rate
- * @param nbr \a nfc_baud_rate to convert
+ * @param \a nfc_baud_rate to convert
 */
 const char *
 str_nfc_baud_rate(const nfc_baud_rate nbr)
@@ -1321,23 +1260,28 @@ str_nfc_baud_rate(const nfc_baud_rate nbr)
   switch (nbr) {
     case NBR_UNDEFINED:
       return "undefined baud rate";
+      break;
     case NBR_106:
       return "106 kbps";
+      break;
     case NBR_212:
       return "212 kbps";
+      break;
     case NBR_424:
       return "424 kbps";
+      break;
     case NBR_847:
       return "847 kbps";
+      break;
   }
-
-  return "???";
+  // Should never go there..
+  return "";
 }
 
 /** @ingroup string-converter
  * @brief Convert \a nfc_modulation_type value to string
  * @return Returns nfc modulation type
- * @param nmt \a nfc_modulation_type to convert
+ * @param \a nfc_modulation_type to convert
 */
 const char *
 str_nfc_modulation_type(const nfc_modulation_type nmt)
@@ -1345,33 +1289,38 @@ str_nfc_modulation_type(const nfc_modulation_type nmt)
   switch (nmt) {
     case NMT_ISO14443A:
       return "ISO/IEC 14443A";
+      break;
     case NMT_ISO14443B:
       return "ISO/IEC 14443-4B";
+      break;
     case NMT_ISO14443BI:
       return "ISO/IEC 14443-4B'";
+      break;
     case NMT_ISO14443B2CT:
       return "ISO/IEC 14443-2B ASK CTx";
+      break;
     case NMT_ISO14443B2SR:
       return "ISO/IEC 14443-2B ST SRx";
+      break;
     case NMT_FELICA:
       return "FeliCa";
+      break;
     case NMT_JEWEL:
       return "Innovision Jewel";
-    case NMT_BARCODE:
-      return "Thinfilm NFC Barcode";
+      break;
     case NMT_DEP:
       return "D.E.P.";
+      break;
   }
-
-  return "???";
+  // Should never go there..
+  return "";
 }
 
 /** @ingroup string-converter
- * @brief Convert \a nfc_target content to string
+ * @brief Convert \a nfc_modulation_type value to string
  * @return Upon successful return, this function returns the number of characters printed (excluding the null byte used to end output to strings), otherwise returns libnfc's error code (negative value)
- * @param pnt \a nfc_target struct pointer to print
+ * @param nt \a nfc_target struct to print
  * @param buf pointer where string will be allocated, then nfc target information printed
- * @param verbose false for essential, true for detailed, human-readable, information
  *
  * @warning *buf must be freed using nfc_free()
 */

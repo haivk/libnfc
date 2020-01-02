@@ -1,11 +1,5 @@
-cmake_minimum_required (VERSION 2.6)
-
-if (NOT DEFINED CMAKE_BUILD_TYPE)
-  set (CMAKE_BUILD_TYPE Release CACHE STRING "Build type")
-endif ()
-
-project (libnfc C)
-
+PROJECT(libnfc C)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 SET(VERSION_MAJOR "1")
 SET(VERSION_MINOR "7")
 SET(VERSION_PATCH "1")
@@ -18,30 +12,29 @@ SET(PACKAGE_STRING "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 
 # config.h
 IF(WIN32)
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config_windows.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config_windows.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
   SET(LIBNFC_SYSCONFDIR "${CMAKE_INSTALL_PREFIX}/config" CACHE PATH "libnfc configuration directory")
   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/contrib/win32)
 ELSE(WIN32)
   SET(_XOPEN_SOURCE 600)
   SET(SYSCONFDIR "/etc" CACHE PATH "System configuration directory")
-  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config_posix.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/config_posix.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
 ENDIF(WIN32)
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 ADD_DEFINITIONS("-DHAVE_CONFIG_H")
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # make it easy to locate CMake modules for finding libraries
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules/")
+SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
 # Options
-option (LIBNFC_LOG "Enable log facility (errors, warning, info and debug messages)" ON)
+SET(LIBNFC_LOG ON CACHE BOOL "Enable log facility (errors, warning, info and debug messages)")
 IF(LIBNFC_LOG)
   ADD_DEFINITIONS(-DLOG)
 ENDIF(LIBNFC_LOG)
 
-option (LIBNFC_ENVVARS "Enable envvars facility" ON)
+SET(LIBNFC_ENVVARS ON CACHE BOOL "Enable envvars facility")
 IF(LIBNFC_ENVVARS)
   ADD_DEFINITIONS(-DENVVARS)
 ENDIF(LIBNFC_ENVVARS)
@@ -56,16 +49,10 @@ ELSE(LIBNFC_DEBUG_MODE)
   SET(WIN32_MODE "release")
 ENDIF(LIBNFC_DEBUG_MODE)
 
-option (LIBNFC_CONFFILES_MODE "Enable configuration files" ON)
+SET(LIBNFC_CONFFILES_MODE ON CACHE BOOL "Enable configuration files")
 IF(LIBNFC_CONFFILES_MODE)
   ADD_DEFINITIONS(-DCONFFILES)
 ENDIF(LIBNFC_CONFFILES_MODE)
-
-option (BUILD_EXAMPLES "build examples ON/OFF" ON)
-option (BUILD_UTILS "build utils ON/OFF" ON)
-
-option (BUILD_DEBPKG "build debian package ON/OFF" OFF)
-
 
 # Doxygen
 SET(builddir "${CMAKE_BINARY_DIR}")
@@ -100,34 +87,12 @@ ENDIF(CMAKE_COMPILER_IS_GNUCC)
 ADD_DEFINITIONS(-Du_int8_t=uint8_t -Du_int16_t=uint16_t)
 
 IF(MINGW)
-  IF (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    # force MinGW-w64 in 32bit mode
-    SET(CMAKE_C_FLAGS "-m32 ${CMAKE_C_FLAGS}")
-    SET(CMAKE_MODULE_LINKER_FLAGS "-m32 -Wl,--enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
-    SET(CMAKE_SHARED_LINKER_FLAGS "-m32 -Wl,--enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
-    SET(CMAKE_EXE_LINKER_FLAGS "-m32 -Wl,--enable-stdcall-fixup ${CMAKE_EXE_LINKER_FLAGS}")
-    SET(CMAKE_RC_FLAGS "--target=pe-i386 --output-format=coff ${CMAKE_RC_FLAGS}")
-  ELSE(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    IF(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
-        # force MinGW-w64 in 32bit mode
-        MESSAGE("Building 32-bit Windows DLL")
-        #SET(CMAKE_C_FLAGS "-m32 ${CMAKE_C_FLAGS}")
-        #SET(CMAKE_MODULE_LINKER_FLAGS "--Wl,--enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
-        #SET(CMAKE_SHARED_LINKER_FLAGS "--Wl,--enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
-        #SET(CMAKE_EXE_LINKER_FLAGS "--Wl,--enable-stdcall-fixup ${CMAKE_EXE_LINKER_FLAGS}")
-        SET(CMAKE_RC_FLAGS "--target=pe-i386 --output-format=coff ${CMAKE_RC_FLAGS}")
-    ELSEIF(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-        MESSAGE("Building 64-bit Windows DLL")
-        SET(CMAKE_RC_FLAGS "--target=pe-x86-64 --output-format=coff ${CMAKE_RC_FLAGS}")
-    ELSE(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
-        MESSAGE(FATAL_ERROR "Unknown Processor: ${CMAKE_SYSTEM_PROCESSOR}")
-    ENDIF(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86")
-  ENDIF(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-
-  FIND_PROGRAM(DLLTOOL dlltool CMAKE_FIND_ROOT_PATH_BOTH)
-  IF (NOT DLLTOOL)
-    MESSAGE(FATAL_ERROR "Could not find dlltool command")
-  ENDIF (NOT DLLTOOL)
+  # force MinGW-w64 in 32bit mode
+  SET(CMAKE_C_FLAGS "-m32 ${CMAKE_C_FLAGS}")
+  SET(CMAKE_MODULE_LINKER_FLAGS "-m32 -Wl,--enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
+  SET(CMAKE_SHARED_LINKER_FLAGS "-m32 -Wl,--enable-stdcall-fixup ${CMAKE_SHARED_LINKER_FLAGS}")
+  SET(CMAKE_EXE_LINKER_FLAGS "-m32 -Wl,--enable-stdcall-fixup ${CMAKE_EXE_LINKER_FLAGS}")
+  SET(CMAKE_RC_FLAGS "--target=pe-i386 --output-format=coff ${CMAKE_RC_FLAGS}")
 ENDIF(MINGW)
 
 IF(NOT WIN32)
@@ -147,23 +112,16 @@ IF(NOT WIN32)
   INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/libnfc.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 ENDIF(NOT WIN32)
 
-INCLUDE(LibnfcDrivers)
+# Require PCRE for Win32
+IF (WIN32)
+  FIND_PACKAGE(PCRE REQUIRED)
+  IF(PCRE_INCLUDE_DIRS)
+    INCLUDE_DIRECTORIES(${PCRE_INCLUDE_DIRS})
+    LINK_DIRECTORIES(${PCRE_LIBRARY_DIRS})
+  ENDIF(PCRE_INCLUDE_DIRS)
+ENDIF(WIN32)
 
-IF(UNIX AND NOT APPLE)
-    IF(I2C_REQUIRED)
-        # Inspired from http://cmake.3232098.n2.nabble.com/RFC-cmake-analog-to-AC-SEARCH-LIBS-td7585423.html
-        INCLUDE (CheckFunctionExists)
-        INCLUDE (CheckLibraryExists)
-        CHECK_FUNCTION_EXISTS (clock_gettime HAVE_CLOCK_GETTIME)
-        IF (NOT HAVE_CLOCK_GETTIME)
-            CHECK_LIBRARY_EXISTS (rt clock_gettime "" HAVE_CLOCK_GETTIME_IN_RT)
-            IF (HAVE_CLOCK_GETTIME_IN_RT)
-                SET(LIBRT_FOUND TRUE)
-                SET(LIBRT_LIBRARIES "rt")
-            ENDIF (HAVE_CLOCK_GETTIME_IN_RT)
-        ENDIF (NOT HAVE_CLOCK_GETTIME)
-    ENDIF(I2C_REQUIRED)
-ENDIF(UNIX AND NOT APPLE)
+INCLUDE(LibnfcDrivers)
 
 IF(PCSC_INCLUDE_DIRS)
   INCLUDE_DIRECTORIES(${PCSC_INCLUDE_DIRS})
@@ -179,22 +137,14 @@ ENDIF(LIBUSB_INCLUDE_DIRS)
 # version.rc for Windows
 IF(WIN32)
   # Date for filling in rc file information
-  IF (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    MACRO (GET_CURRENT_YEAR RESULT)
-        EXECUTE_PROCESS(COMMAND "cmd" " /C date /T" OUTPUT_VARIABLE ${RESULT})
-        STRING(REGEX REPLACE "\n" "" ${RESULT} ${${RESULT}})
-        STRING(REGEX REPLACE ".*(..)/(..)/(....).*" "\\3" ${RESULT} ${${RESULT}})
-    ENDMACRO (GET_CURRENT_YEAR)
-  ELSE(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    MACRO (GET_CURRENT_YEAR RESULT)
-        EXECUTE_PROCESS(COMMAND "date" "+%Y" OUTPUT_VARIABLE ${RESULT})
-        STRING(REGEX REPLACE "\n" "" ${RESULT} ${${RESULT}})
-    ENDMACRO (GET_CURRENT_YEAR)
-  ENDIF(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+  MACRO (GET_CURRENT_YEAR RESULT)
+    EXECUTE_PROCESS(COMMAND "cmd" " /C date /T" OUTPUT_VARIABLE ${RESULT})
+    STRING(REGEX REPLACE "\n" "" ${RESULT} ${${RESULT}})
+    STRING(REGEX REPLACE ".*(..)/(..)/(....).*" "\\3" ${RESULT} ${${RESULT}})
+  ENDMACRO (GET_CURRENT_YEAR)
   GET_CURRENT_YEAR(CURRENT_YEAR)
   MESSAGE("Year for copyright is " ${CURRENT_YEAR})
 
-  SET(prefix ${CMAKE_INSTALL_PREFIX})
   SET(RC_COMMENT "${PACKAGE_NAME} library")
   SET(RC_INTERNAL_NAME "${PACKAGE_NAME} ${WIN32_MODE}")
   SET(RC_ORIGINAL_NAME ${PACKAGE_NAME}.dll)
@@ -204,91 +154,19 @@ ENDIF(WIN32)
 
 ADD_SUBDIRECTORY(libnfc)
 ADD_SUBDIRECTORY(include)
-
-if (BUILD_UTILS)
-  add_subdirectory (utils)
-endif ()
-
-if (BUILD_EXAMPLES)
-  add_subdirectory (examples)
-endif ()
-
-if (NOT MSVC)
-  # config script install path
-  if ( NOT DEFINED LIBNFC_CMAKE_CONFIG_DIR )
-    set ( LIBNFC_CMAKE_CONFIG_DIR lib${LIB_SUFFIX}/cmake/libnfc )
-  endif ()
-
-  set ( LIBNFC_INCLUDE_DIR ${includedir} )
-  set ( LIBNFC_INCLUDE_DIRS ${LIBNFC_INCLUDE_DIR} )
-  list ( APPEND LIBNFC_INCLUDE_DIRS ${LIBUSB_INCLUDE_DIRS} )
-  set ( LIBNFC_LIBRARY nfc )
-  set ( LIBNFC_LIBRARIES ${LIBNFC_LIBRARY} )
-  list ( APPEND LIBNFC_LIBRARIES ${LIBUSB_LIBRARIES} )
-  set ( LIBNFC_LIBRARY_DIRS ${libdir} )
-  set ( LIBNFC_ROOT_DIR ${prefix} )
-  set ( LIBNFC_VERSION_STRING ${VERSION} )
-  set ( LIBNFC_VERSION_MAJOR ${VERSION_MAJOR} )
-  set ( LIBNFC_VERSION_MINOR ${VERSION_MINOR} )
-  set ( LIBNFC_VERSION_PATCH ${VERSION_PATCH} )
-
-  set ( LIBNFC_USE_FILE ${CMAKE_INSTALL_PREFIX}/${LIBNFC_CMAKE_CONFIG_DIR}/UseLibNFC.cmake )
-
-
-          
-  if(CMAKE_VERSION VERSION_LESS 2.8.8)
-    configure_file ( cmake/LibNFCConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfig.cmake @ONLY )
-    configure_file ( cmake/LibNFCConfigVersion.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfigVersion.cmake @ONLY )
-  else ()
-    include(CMakePackageConfigHelpers)
-    configure_package_config_file (
-      cmake/LibNFCConfig.cmake.in
-      ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfig.cmake
-      INSTALL_DESTINATION ${LIBNFC_CMAKE_CONFIG_DIR}
-      PATH_VARS
-        LIBNFC_USE_FILE
-        LIBNFC_ROOT_DIR
-        LIBNFC_INCLUDE_DIR
-        LIBNFC_INCLUDE_DIRS
-        LIBNFC_LIBRARY_DIRS
-        NO_CHECK_REQUIRED_COMPONENTS_MACRO
-    )
-    write_basic_package_version_file (
-      LibNFCConfigVersion.cmake 
-      VERSION ${LIBNFC_VERSION_STRING} 
-      COMPATIBILITY AnyNewerVersion
-    )
-  endif ()
-   
-  install ( FILES ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfig.cmake
-                  ${CMAKE_CURRENT_BINARY_DIR}/LibNFCConfigVersion.cmake
-                  cmake/UseLibNFC.cmake
-            DESTINATION ${LIBNFC_CMAKE_CONFIG_DIR}
-          )
-   
-endif ()
+ADD_SUBDIRECTORY(utils)
+ADD_SUBDIRECTORY(examples)
 
 # Binary Package
 IF(WIN32)
   SET(CPACK_GENERATOR "ZIP")
 ELSE(WIN32)
   SET(CPACK_GENERATOR "TBZ2")
-  IF(BUILD_DEBPKG)
-    SET(CPACK_GENERATOR "DEB")
-  ENDIF(BUILD_DEBPKG)
 ENDIF(WIN32)
 
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Near Field Communication (NFC) library")
 SET(CPACK_PACKAGE_VENDOR "Roel Verdult")
-SET(CPACK_PACKAGE_CONTACT "Roel Verdult <roel@libnfc.org>")
-
-#Readme file
-IF(WIN32)
-  SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README-Windows.md")
-ELSE(WIN32)
-  SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-ENDIF(WIN32)
-
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
 SET(CPACK_PACKAGE_INSTALL_DIRECTORY "libnfc")
 SET(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})

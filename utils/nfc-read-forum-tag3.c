@@ -178,6 +178,7 @@ main(int argc, char *argv[])
       case 'h':
         print_usage(argv[0]);
         exit(EXIT_SUCCESS);
+        break;
       case 'q':
         quiet = true;
         break;

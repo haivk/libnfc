@@ -10,12 +10,8 @@ pkgconfig_DATA = libnfc.pc
 EXTRA_DIST = \
 	CMakeLists.txt \
 	Doxyfile \
-	HACKING.md \
-	NEWS.md \
-	README.md \
-	README-Windows.md \
-	libnfc.conf.sample \
-	mingw-cross-compile.sh
+	README-Windows.txt \
+	libnfc.conf.sample
 
 CLEANFILES = Doxygen.log coverage.info libnfc.pc
 
@@ -38,7 +34,7 @@ style:
 	find . -name "*.[ch]" -exec astyle --formatted --mode=c --suffix=none \
 	    --indent=spaces=2 --indent-switches --indent-preprocessor \
 	    --keep-one-line-blocks --max-instatement-indent=60 \
-	    --style=linux --pad-oper --unpad-paren --pad-header \
+	    --brackets=linux --pad-oper --unpad-paren --pad-header \
 	    --align-pointer=name {} \;
 
 cppcheck:

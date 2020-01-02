@@ -1,5 +1,4 @@
 SET(UTILS-SOURCES 
-  nfc-barcode
   nfc-emulate-forum-tag4
   nfc-jewel
   nfc-list

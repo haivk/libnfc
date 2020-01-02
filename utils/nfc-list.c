@@ -71,9 +71,8 @@ print_usage(const char *progname)
   printf("\t  16: ISO14443B'\n");
   printf("\t  32: ISO14443B-2 ST SRx\n");
   printf("\t  64: ISO14443B-2 ASK CTx\n");
-  printf("\t 128: ISO14443A-3 Jewel\n");
-  printf("\t 256: ISO14443A-2 NFC Barcode\n");
-  printf("\tSo 511 (default) polls for all types.\n");
+  printf("\t 128: Jewel\n");
+  printf("\tSo 255 (default) polls for all types.\n");
   printf("\tNote that if 16, 32 or 64 then 8 is selected too.\n");
 }
 
@@ -85,7 +84,7 @@ main(int argc, const char *argv[])
   size_t  i;
   bool verbose = false;
   int res = 0;
-  int mask = 0x1ff;
+  int mask = 0xff;
   int arg;
 
   nfc_context *context;
@@ -109,7 +108,7 @@ main(int argc, const char *argv[])
     } else if ((0 == strcmp(argv[arg], "-t")) && (arg + 1 < argc)) {
       arg++;
       mask = atoi(argv[arg]);
-      if ((mask < 1) || (mask > 0x1ff)) {
+      if ((mask < 1) || (mask > 255)) {
         ERR("%i is invalid value for type bitfield.", mask);
         print_usage(argv[0]);
         exit(EXIT_FAILURE);
@@ -278,23 +277,7 @@ main(int argc, const char *argv[])
       if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
         int n;
         if (verbose || (res > 0)) {
-          printf("%d ISO14443A-3 Jewel passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
-        }
-        for (n = 0; n < res; n++) {
-          print_nfc_target(&ant[n], verbose);
-          printf("\n");
-        }
-      }
-    }
-
-    if (mask & 0x100) {
-      nm.nmt = NMT_BARCODE;
-      nm.nbr = NBR_106;
-      // List NFC Barcode targets
-      if ((res = nfc_initiator_list_passive_targets(pnd, nm, ant, MAX_TARGET_COUNT)) >= 0) {
-        int n;
-        if (verbose || (res > 0)) {
-          printf("%d ISO14443A-2 NFC Barcode passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
+          printf("%d Jewel passive target(s) found%s\n", res, (res == 0) ? ".\n" : ":");
         }
         for (n = 0; n < res; n++) {
           print_nfc_target(&ant[n], verbose);
